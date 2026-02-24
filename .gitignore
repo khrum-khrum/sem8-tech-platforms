@@ -1,0 +1,79 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+out/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## EF Core migrations (generated on startup)
+# Keep migration files tracked; ignore only runtime artifacts
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+## Compiled binaries
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.ilk
+*.map
+*.exp
+*.lib
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VSCode
+.vscode/
+
+## Rider / JetBrains
+.idea/
+*.DotSettings.user
+
+## Logs
+*.log
+logs/
+
+## Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+## Published output
+publish/
+
+## MSBuild / SDK generated folders
+.BuildHost-*/
+_BuildHost-*/
+
+## Docker
+docker-compose.override.yml
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Local config overrides (secrets)
+appsettings.Local.json
+appsettings.Development.json
+secrets.json

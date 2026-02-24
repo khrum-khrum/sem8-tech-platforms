@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet tool install --global dotnet-ef)",
+      "Bash(dotnet ef migrations add InitialCreate --project src/CdrBilling.Infrastructure/CdrBilling.Infrastructure.csproj --startup-project src/CdrBilling.Api/CdrBilling.Api.csproj)",
+      "Bash(dotnet add src/CdrBilling.Api/CdrBilling.Api.csproj package Microsoft.EntityFrameworkCore.Design)",
+      "Bash(export PATH=\"$HOME/.dotnet/tools:$PATH\")",
+      "Bash(export PATH=\"$HOME/.dotnet/tools:/opt/homebrew/Cellar/dotnet/10.0.103/libexec:$PATH\")",
+      "Bash(~/.dotnet/tools/dotnet-ef migrations add InitialCreate --project src/CdrBilling.Infrastructure/CdrBilling.Infrastructure.csproj --startup-project src/CdrBilling.Api/CdrBilling.Api.csproj)",
+      "Bash(DOTNET_ROOT=/opt/homebrew/Cellar/dotnet/10.0.103/libexec /opt/homebrew/bin/dotnet tool run dotnet-ef -- migrations add InitialCreate --project src/CdrBilling.Infrastructure/CdrBilling.Infrastructure.csproj --startup-project src/CdrBilling.Api/CdrBilling.Api.csproj)",
+      "Bash(DOTNET_ROOT=/opt/homebrew/Cellar/dotnet/10.0.103/libexec ~/.dotnet/tools/dotnet-ef migrations add InitialCreate --project src/CdrBilling.Infrastructure/CdrBilling.Infrastructure.csproj --startup-project src/CdrBilling.Api/CdrBilling.Api.csproj)",
+      "Bash(dotnet build)"
+    ]
+  }
+}

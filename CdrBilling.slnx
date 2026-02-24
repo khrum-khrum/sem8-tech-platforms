@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CdrBilling.Api/CdrBilling.Api.csproj" />
+    <Project Path="src/CdrBilling.Application/CdrBilling.Application.csproj" />
+    <Project Path="src/CdrBilling.Domain/CdrBilling.Domain.csproj" />
+    <Project Path="src/CdrBilling.Infrastructure/CdrBilling.Infrastructure.csproj" />
+  </Folder>
+</Solution>
