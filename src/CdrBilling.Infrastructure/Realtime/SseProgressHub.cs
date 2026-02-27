@@ -5,7 +5,9 @@ namespace CdrBilling.Infrastructure.Realtime;
 
 public sealed record ProgressEvent(int Processed, int Total, string Status, string? Error = null)
 {
-    public double Percent => Total > 0 ? Math.Round(Processed * 100.0 / Total, 1) : 0;
+    public double Percent => Total > 0
+        ? Math.Round(Processed * 100.0 / Total, 1)
+        : Status == "completed" ? 100 : 0;
 }
 
 /// <summary>

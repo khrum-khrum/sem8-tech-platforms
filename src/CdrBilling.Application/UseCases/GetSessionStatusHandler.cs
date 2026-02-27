@@ -1,5 +1,6 @@
 using CdrBilling.Application.Abstractions;
 using CdrBilling.Application.DTOs;
+using CdrBilling.Domain.Enums;
 using MediatR;
 
 namespace CdrBilling.Application.UseCases;
@@ -16,7 +17,7 @@ public sealed class GetSessionStatusHandler(IBillingSessionRepository repo)
 
         var percent = session.TotalRecords > 0
             ? Math.Round(session.ProcessedRecords * 100.0 / session.TotalRecords, 1)
-            : 0.0;
+            : session.Status == SessionStatus.Completed ? 100.0 : 0.0;
 
         return new SessionStatusDto(
             session.Id,
