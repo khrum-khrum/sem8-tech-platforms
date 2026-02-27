@@ -78,7 +78,7 @@ public sealed class RunTarificationHandler(
             session.MarkCompleted();
             await sessionRepo.UpdateAsync(session, cancellationToken);
 
-            await progress.ReportCompletedAsync(sessionId, cancellationToken);
+            await progress.ReportCompletedAsync(sessionId, processed, total, cancellationToken);
 
             logger.LogInformation(
                 "Tariffication completed for session {SessionId}: {Processed} records processed.",
