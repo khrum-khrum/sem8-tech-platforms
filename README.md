@@ -6,9 +6,9 @@ High-performance ASP.NET Core 10 backend for processing telecom Call Detail Reco
 
 ## Prerequisites
 
-| Tool | Version |
-|---|---|
-| .NET SDK | 10.0+ |
+| Tool           | Version    |
+| -------------- | ---------- |
+| .NET SDK       | 10.0+      |
 | Docker Desktop | any recent |
 
 ---
@@ -23,20 +23,21 @@ docker compose up -d
 dotnet run --project src/CdrBilling.Api
 ```
 
-The API is now running at `http://localhost:5000`.
+The API is now running at `http://localhost:13000`.
 
 ---
 
 ## API Docs
 
-| URL | Description |
-|---|---|
-| `http://localhost:5000/scalar/v1` | Interactive API UI |
-| `http://localhost:5000/openapi/v1.json` | Raw OpenAPI spec (JSON) |
+| URL                                      | Description             |
+| ---------------------------------------- | ----------------------- |
+| `http://localhost:13000/scalar/v1`       | Interactive API UI      |
+| `http://localhost:13000/openapi/v1.json` | Raw OpenAPI spec (JSON) |
 
 To export the spec as a file:
+
 ```bash
-curl http://localhost:5000/openapi/v1.json -o swagger.json
+curl http://localhost:13000/openapi/v1.json -o swagger.json
 ```
 
 ---
@@ -50,6 +51,7 @@ Host=localhost;Port=5432;Database=cdr_billing;Username=postgres;Password=postgre
 ```
 
 Override via environment variable:
+
 ```bash
 ConnectionStrings__Postgres="Host=..." dotnet run --project src/CdrBilling.Api
 ```
@@ -91,27 +93,27 @@ phone_number;client_name
 
 ### Sessions
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/sessions` | Create a new billing session |
-| `GET` | `/api/sessions/{id}/status` | Session status and progress % |
+| Method | Path                        | Description                   |
+| ------ | --------------------------- | ----------------------------- |
+| `POST` | `/api/sessions`             | Create a new billing session  |
+| `GET`  | `/api/sessions/{id}/status` | Session status and progress % |
 
 ### Upload
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/sessions/{id}/upload/cdr` | Upload CDR file (`multipart/form-data`, field: `file`) |
-| `POST` | `/api/sessions/{id}/upload/tariff` | Upload tariff file (`multipart/form-data`, field: `file`) |
+| Method | Path                                    | Description                                                   |
+| ------ | --------------------------------------- | ------------------------------------------------------------- |
+| `POST` | `/api/sessions/{id}/upload/cdr`         | Upload CDR file (`multipart/form-data`, field: `file`)        |
+| `POST` | `/api/sessions/{id}/upload/tariff`      | Upload tariff file (`multipart/form-data`, field: `file`)     |
 | `POST` | `/api/sessions/{id}/upload/subscribers` | Upload subscriber file (`multipart/form-data`, field: `file`) |
 
 ### Billing
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/sessions/{id}/run` | Start tariffication — returns `202` immediately |
-| `GET` | `/api/sessions/{id}/progress` | SSE stream — real-time progress events |
-| `GET` | `/api/sessions/{id}/results/summary` | Total charge per subscriber |
-| `GET` | `/api/sessions/{id}/results/calls` | Paged call records with computed charges |
+| Method | Path                                 | Description                                     |
+| ------ | ------------------------------------ | ----------------------------------------------- |
+| `POST` | `/api/sessions/{id}/run`             | Start tariffication — returns `202` immediately |
+| `GET`  | `/api/sessions/{id}/progress`        | SSE stream — real-time progress events          |
+| `GET`  | `/api/sessions/{id}/results/summary` | Total charge per subscriber                     |
+| `GET`  | `/api/sessions/{id}/results/calls`   | Paged call records with computed charges        |
 
 Query params for `/results/calls`: `?phone=79161234567&page=1&pageSize=50` (pageSize max 200)
 
@@ -121,21 +123,21 @@ Query params for `/results/calls`: `?phone=79161234567&page=1&pageSize=50` (page
 
 ```bash
 # 1. Create session
-SESSION_ID=$(curl -s -X POST http://localhost:5000/api/sessions | jq -r '.sessionId')
+SESSION_ID=$(curl -s -X POST http://localhost:13000/api/sessions | jq -r '.sessionId')
 echo "Session: $SESSION_ID"
 
 # 2. Upload files
-curl -F "file=@cdr.txt"         http://localhost:5000/api/sessions/$SESSION_ID/upload/cdr
-curl -F "file=@tariffs.csv"     http://localhost:5000/api/sessions/$SESSION_ID/upload/tariff
-curl -F "file=@subscribers.csv" http://localhost:5000/api/sessions/$SESSION_ID/upload/subscribers
+curl -F "file=@cdr.txt"         http://localhost:13000/api/sessions/$SESSION_ID/upload/cdr
+curl -F "file=@tariffs.csv"     http://localhost:13000/api/sessions/$SESSION_ID/upload/tariff
+curl -F "file=@subscribers.csv" http://localhost:13000/api/sessions/$SESSION_ID/upload/subscribers
 
 # 3. Watch progress (background) and start tariffication
-curl -N http://localhost:5000/api/sessions/$SESSION_ID/progress &
-curl -X POST http://localhost:5000/api/sessions/$SESSION_ID/run
+curl -N http://localhost:13000/api/sessions/$SESSION_ID/progress &
+curl -X POST http://localhost:13000/api/sessions/$SESSION_ID/run
 
 # 4. View results
-curl http://localhost:5000/api/sessions/$SESSION_ID/results/summary
-curl "http://localhost:5000/api/sessions/$SESSION_ID/results/calls?page=1&pageSize=50"
+curl http://localhost:13000/api/sessions/$SESSION_ID/results/summary
+curl "http://localhost:13000/api/sessions/$SESSION_ID/results/calls?page=1&pageSize=50"
 ```
 
 ---
@@ -182,11 +184,11 @@ CdrBilling.Api            — Minimal API endpoints, DI composition root
 
 Key performance decisions:
 
-| Concern | Solution |
-|---|---|
-| Large CDR ingestion | `System.IO.Pipelines` + Npgsql binary `COPY` |
-| Tariff lookup | In-memory prefix trie — O(k) per call |
-| Batch DB updates | Temp table + `UPDATE … FROM` |
-| Progress reporting | `Channel<ProgressEvent>` per session + SSE |
-| Read queries | Dapper + raw SQL for billing summaries |
+| Concern               | Solution                                       |
+| --------------------- | ---------------------------------------------- |
+| Large CDR ingestion   | `System.IO.Pipelines` + Npgsql binary `COPY`   |
+| Tariff lookup         | In-memory prefix trie — O(k) per call          |
+| Batch DB updates      | Temp table + `UPDATE … FROM`                   |
+| Progress reporting    | `Channel<ProgressEvent>` per session + SSE     |
+| Read queries          | Dapper + raw SQL for billing summaries         |
 | Background processing | `IServiceScopeFactory` + `Task.Run` → HTTP 202 |

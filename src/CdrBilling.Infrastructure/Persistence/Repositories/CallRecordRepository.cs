@@ -68,25 +68,29 @@ public sealed class CallRecordRepository(AppDbContext db, NpgsqlDataSource dataS
         CancellationToken ct = default)
     {
         await using var conn = await dataSource.OpenConnectionAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
 
         // Use a temp table + UPDATE FROM for batch efficiency
         await using var cmd = conn.CreateCommand();
+        cmd.Transaction = tx;
         cmd.CommandText = "CREATE TEMP TABLE tmp_charges (id BIGINT, charge NUMERIC(12,4), tariff_id BIGINT) ON COMMIT DROP";
         await cmd.ExecuteNonQueryAsync(ct);
 
-        await using var writer = await conn.BeginBinaryImportAsync(
-            "COPY tmp_charges (id, charge, tariff_id) FROM STDIN (FORMAT BINARY)", ct);
-
-        foreach (var (id, charge, tariffId) in updates)
+        await using (var writer = await conn.BeginBinaryImportAsync(
+                         "COPY tmp_charges (id, charge, tariff_id) FROM STDIN (FORMAT BINARY)", ct))
         {
-            await writer.StartRowAsync(ct);
-            await writer.WriteAsync(id, NpgsqlDbType.Bigint, ct);
-            await writer.WriteAsync(charge, NpgsqlDbType.Numeric, ct);
-            await writer.WriteAsync(tariffId, NpgsqlDbType.Bigint, ct);
+            foreach (var (id, charge, tariffId) in updates)
+            {
+                await writer.StartRowAsync(ct);
+                await writer.WriteAsync(id, NpgsqlDbType.Bigint, ct);
+                await writer.WriteAsync(charge, NpgsqlDbType.Numeric, ct);
+                await writer.WriteAsync(tariffId, NpgsqlDbType.Bigint, ct);
+            }
+            await writer.CompleteAsync(ct);
         }
-        await writer.CompleteAsync(ct);
 
         await using var updateCmd = conn.CreateCommand();
+        updateCmd.Transaction = tx;
         updateCmd.CommandText = """
             UPDATE call_records cr
             SET computed_charge = tc.charge,
@@ -95,6 +99,8 @@ public sealed class CallRecordRepository(AppDbContext db, NpgsqlDataSource dataS
             WHERE cr.id = tc.id
             """;
         await updateCmd.ExecuteNonQueryAsync(ct);
+
+        await tx.CommitAsync(ct);
     }
 
     public async Task<IReadOnlyList<SubscriberSummaryDto>> GetSummaryAsync(

@@ -8,7 +8,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BASE_URL="http://localhost:5000"
+BASE_URL="http://localhost:13000"
 API_PROJECT="$REPO_ROOT/src/CdrBilling.Api"
 
 PASS=0

@@ -77,3 +77,5 @@ Thumbs.db
 appsettings.Local.json
 appsettings.Development.json
 secrets.json
+
+example
