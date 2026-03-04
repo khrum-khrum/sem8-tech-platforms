@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { UploadTemplate } from '../uploadTemplates'
 
@@ -12,11 +12,7 @@ interface UploadScreenProps {
 }
 
 export function UploadScreen({ template, busy, uploadStatus, initialFile, onBack, onSubmit }: UploadScreenProps) {
-  const [file, setFile] = useState<File | null>(initialFile)
-
-  useEffect(() => {
-    setFile(initialFile)
-  }, [initialFile, template.kind])
+  const [file, setFile] = useState<File | null>(() => initialFile)
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

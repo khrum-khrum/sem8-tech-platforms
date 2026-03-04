@@ -18,20 +18,17 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 #root {
   width: 100%;
+  min-height: 100vh;
 }
 
 h1,
 h2,
 p {
   margin: 0;
-  text-align: center;
 }
 
 button,
