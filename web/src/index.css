@@ -54,6 +54,10 @@ input {
   font: inherit;
 }
 
+select {
+  font: inherit;
+}
+
 button {
   border: 1px solid #c8ceda;
   border-radius: 8px;
