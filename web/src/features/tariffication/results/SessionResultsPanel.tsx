@@ -25,7 +25,9 @@ type CallsFilters = {
   callId: string
   direction: string
   disposition: string
-  trunkName: string
+  callingParty: string
+  calledParty: string
+  tariffId: string
 }
 
 function includesInsensitive(haystack: string, needle: string) {
@@ -47,7 +49,9 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
     callId: '',
     direction: '',
     disposition: '',
-    trunkName: '',
+    callingParty: '',
+    calledParty: '',
+    tariffId: '',
   })
 
   const [callsPage, setCallsPage] = useState(1)
@@ -69,7 +73,7 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
   useEffect(() => {
     void getCallRecords(
       props.sessionId,
-      props.model.phoneFilter.trim() || undefined,
+      undefined,
       callsPage,
       callsPageSize,
     )
@@ -98,12 +102,26 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
     const items = props.model.callRecords?.items ?? []
     return items.filter((c) => {
       if (!includesInsensitive(c.callId, callsFilters.callId)) return false
+      if (!includesInsensitive(c.callingParty, callsFilters.callingParty)) return false
+      if (!includesInsensitive(c.calledParty, callsFilters.calledParty)) return false
       if (callsFilters.direction && c.direction !== callsFilters.direction) return false
       if (callsFilters.disposition && c.disposition !== callsFilters.disposition) return false
-      if (!includesInsensitive(c.trunkName ?? '', callsFilters.trunkName)) return false
+      if (callsFilters.tariffId) {
+        const tid = Number(callsFilters.tariffId)
+        if (!Number.isFinite(tid)) return false
+        if ((c.appliedTariff?.id ?? null) !== tid) return false
+      }
       return true
     })
-  }, [callsFilters.callId, callsFilters.direction, callsFilters.disposition, callsFilters.trunkName, props.model.callRecords])
+  }, [
+    callsFilters.callId,
+    callsFilters.calledParty,
+    callsFilters.callingParty,
+    callsFilters.direction,
+    callsFilters.disposition,
+    callsFilters.tariffId,
+    props.model.callRecords,
+  ])
 
   const directions = useMemo(
     () => uniq((props.model.callRecords?.items ?? []).map((c) => c.direction)),
@@ -111,6 +129,13 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
   )
   const dispositions = useMemo(
     () => uniq((props.model.callRecords?.items ?? []).map((c) => c.disposition)),
+    [props.model.callRecords],
+  )
+  const tariffIds = useMemo(
+    () =>
+      uniq((props.model.callRecords?.items ?? []).map((c) => (c.appliedTariff ? String(c.appliedTariff.id) : null))).sort(
+        (a, b) => Number(a) - Number(b),
+      ),
     [props.model.callRecords],
   )
 
@@ -179,15 +204,19 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
           ) : (
             <div className="filters-grid">
               <label className="field">
-                <span className="field-label">Телефон (серверный фильтр)</span>
+                <span className="field-label">Кто звонил</span>
                 <input
                   type="text"
-                  value={props.model.phoneFilter}
-                  onChange={(e) => {
-                    setCallsPage(1)
-                    props.model.setPhoneFilter(e.target.value)
-                  }}
-                  placeholder="например 7999"
+                  value={callsFilters.callingParty}
+                  onChange={(e) => setCallsFilters((p) => ({ ...p, callingParty: e.target.value }))}
+                />
+              </label>
+              <label className="field">
+                <span className="field-label">Кому</span>
+                <input
+                  type="text"
+                  value={callsFilters.calledParty}
+                  onChange={(e) => setCallsFilters((p) => ({ ...p, calledParty: e.target.value }))}
                 />
               </label>
               <label className="field">
@@ -227,12 +256,18 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
                 </select>
               </label>
               <label className="field">
-                <span className="field-label">Транк</span>
-                <input
-                  type="text"
-                  value={callsFilters.trunkName}
-                  onChange={(e) => setCallsFilters((p) => ({ ...p, trunkName: e.target.value }))}
-                />
+                <span className="field-label">Тариф</span>
+                <select
+                  value={callsFilters.tariffId}
+                  onChange={(e) => setCallsFilters((p) => ({ ...p, tariffId: e.target.value }))}
+                >
+                  <option value="">Любой</option>
+                  {tariffIds.map((id) => (
+                    <option key={id} value={id}>
+                      #{id}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
           )}
