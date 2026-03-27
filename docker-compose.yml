@@ -16,15 +16,11 @@ services:
       retries: 10
 
   api:
-    image: mcr.microsoft.com/dotnet/sdk:10.0
-    working_dir: /workspace
-    command: >
-      sh -c "dotnet restore &&
-             dotnet run --project src/CdrBilling.Api --urls http://0.0.0.0:13000"
+    build:
+      context: .
+      dockerfile: src/CdrBilling.Api/Dockerfile
     environment:
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=cdr_billing;Username=postgres;Password=postgres
-    volumes:
-      - ./:/workspace
     ports:
       - "13000:13000"
     depends_on:
@@ -32,16 +28,11 @@ services:
         condition: service_healthy
 
   web:
-    image: node:22-alpine
-    working_dir: /app
-    command: >
-      sh -c "npm install &&
-             npm run dev -- --host 0.0.0.0 --port 5173"
+    build:
+      context: ./web
+      dockerfile: Dockerfile
     environment:
       VITE_API_BASE_URL: http://localhost:13000
-    volumes:
-      - ./web:/app
-      - web_node_modules:/app/node_modules
     ports:
       - "5173:5173"
     depends_on:
@@ -49,4 +40,3 @@ services:
 
 volumes:
   pgdata:
-  web_node_modules:

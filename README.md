@@ -16,14 +16,12 @@ High-performance ASP.NET Core 10 backend for processing telecom Call Detail Reco
 ## Quick Start
 
 ```bash
-# 1. Start PostgreSQL
-docker compose up -d
-
-# 2. Run the API (migrations applied automatically on startup)
-dotnet run --project src/CdrBilling.Api
+# 1. Start the full stack
+docker compose up --build
 ```
 
 The API is now running at `http://localhost:13000`.
+The web UI is available at `http://localhost:5173`.
 
 ---
 
