@@ -13,13 +13,12 @@ public sealed class SubscriberFileParser : ISubscriberFileParser
     public IEnumerable<Subscriber> Parse(Stream stream, Guid sessionId)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-        bool first = true;
 
         while (reader.ReadLine() is { } line)
         {
-            if (first) { first = false; continue; }
             line = line.Trim();
             if (string.IsNullOrWhiteSpace(line)) continue;
+            if (IsHeader(line)) continue;
 
             var parts = line.Split(';', 2);
             if (parts.Length < 2) continue;
@@ -31,4 +30,7 @@ public sealed class SubscriberFileParser : ISubscriberFileParser
             yield return Subscriber.Create(sessionId, phone, name);
         }
     }
+
+    private static bool IsHeader(string line)
+        => line.StartsWith("phone_number;", StringComparison.OrdinalIgnoreCase);
 }

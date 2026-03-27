@@ -15,7 +15,6 @@ public sealed class TarificationEngine
 
     public TarificationEngine(IReadOnlyList<TariffEntry> tariffs)
     {
-        // Group by prefix, insert list once per prefix node
         var grouped = tariffs.GroupBy(t => t.Prefix);
         foreach (var g in grouped)
             _trie.Insert(g.Key, [.. g]);

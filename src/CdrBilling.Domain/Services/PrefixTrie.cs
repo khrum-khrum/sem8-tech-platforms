@@ -42,6 +42,9 @@ public sealed class PrefixTrie<TValue>
         var results = new List<TValue>(4);
         var node = _root;
 
+        if (node.HasValue)
+            results.Add(node.Value!);
+
         foreach (var ch in input)
         {
             if (!node.Children.TryGetValue(ch, out var child))

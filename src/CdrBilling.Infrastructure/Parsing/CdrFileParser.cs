@@ -21,8 +21,6 @@ public sealed class CdrFileParser : ICdrFileParser
         [EnumeratorCancellation] CancellationToken ct = default)
     {
         var pipeReader = PipeReader.Create(stream, new StreamPipeReaderOptions(bufferSize: 65536));
-        bool isFirstLine = true;
-
         try
         {
             while (true)
@@ -32,8 +30,6 @@ public sealed class CdrFileParser : ICdrFileParser
 
                 while (TryReadLine(ref buffer, result.IsCompleted, out var line))
                 {
-                    if (isFirstLine) { isFirstLine = false; continue; }
-
                     var record = TryParseLine(line, sessionId);
                     if (record is not null)
                         yield return record;
@@ -77,6 +73,7 @@ public sealed class CdrFileParser : ICdrFileParser
             // Decode to string — acceptable cost vs. Span-based parsing for correctness
             var text = Encoding.UTF8.GetString(lineSeq).TrimEnd('\r', '\n').Trim();
             if (string.IsNullOrWhiteSpace(text)) return null;
+            if (IsHeader(text)) return null;
 
             var parts = text.Split('|');
             if (parts.Length < 12) return null;
@@ -118,4 +115,7 @@ public sealed class CdrFileParser : ICdrFileParser
         "no_answer" => Disposition.NoAnswer,
         _           => Disposition.Failed
     };
+
+    private static bool IsHeader(string line)
+        => line.StartsWith("StartTime|", StringComparison.OrdinalIgnoreCase);
 }
