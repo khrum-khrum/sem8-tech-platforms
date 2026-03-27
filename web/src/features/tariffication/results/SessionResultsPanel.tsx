@@ -67,10 +67,15 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
       .catch(() => {
         // errors are surfaced via existing error panel in flow; keep silent here
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.model.setSummary, props.model.summary.length, props.sessionId])
+
+  useEffect(() => {
+    setCallsPage(1)
   }, [props.sessionId])
 
   useEffect(() => {
+    if (tab !== 'calls') return
+    if (props.model.callRecords?.page === callsPage) return
     void getCallRecords(
       props.sessionId,
       undefined,
@@ -81,7 +86,7 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
       .catch(() => {
         // see note above
       })
-  }, [callsPage, callsPageSize, props.model, props.sessionId])
+  }, [callsPage, callsPageSize, props.model.callRecords?.page, props.model.setCallRecords, props.sessionId, tab])
 
   const filteredSummary = useMemo(() => {
     const phone = summaryFilters.phone.trim()
@@ -410,4 +415,3 @@ export function SessionResultsPanel(props: { sessionId: string; busy: boolean; m
     </section>
   )
 }
-

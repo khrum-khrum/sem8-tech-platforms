@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createSession,
-  getCallRecords,
   getSummary,
   openProgressStream,
   runTariffication,
@@ -57,6 +56,18 @@ export function TarifficationFlow() {
     resetSession,
   } = useTarifficationSessionState()
   const readyToStart = useMemo(() => uploadTemplates.every((t) => Boolean(uploadedFiles[t.kind])), [uploadedFiles])
+  const resultsModel = useMemo(
+    () =>
+      ({
+        summary,
+        setSummary,
+        callRecords,
+        setCallRecords,
+        phoneFilter,
+        setPhoneFilter,
+      }) satisfies ResultsModel,
+    [callRecords, phoneFilter, summary, setCallRecords, setPhoneFilter, setSummary],
+  )
 
   const closeProgressStream = useCallback(() => {
     if (streamRef.current) {
@@ -74,22 +85,18 @@ export function TarifficationFlow() {
     return newSessionId
   }, [setSessionId])
 
-  const fetchResults = useCallback(async (targetSessionId: string, phone?: string) => {
-    const [summaryResult, callsResult] = await Promise.all([
-      getSummary(targetSessionId),
-      getCallRecords(targetSessionId, phone),
-    ])
+  const fetchSummary = useCallback(async (targetSessionId: string) => {
+    const summaryResult = await getSummary(targetSessionId)
     setSummary(summaryResult)
-    setCallRecords(callsResult)
-  }, [setCallRecords, setSummary])
+  }, [setSummary])
 
   useEffect(() => {
     if (!sessionId || isRunning) return
-    if (summary.length > 0 && callRecords) return
-    void fetchResults(sessionId).catch((err) => {
+    if (summary.length > 0) return
+    void fetchSummary(sessionId).catch((err) => {
       setError(err instanceof Error ? err.message : 'Не удалось загрузить результаты.')
     })
-  }, [callRecords, fetchResults, isRunning, sessionId, summary.length])
+  }, [fetchSummary, isRunning, sessionId, summary.length])
 
   useEffect(() => {
     if (!sessionId || !startedAtMs || finishedAtMs) return
@@ -118,7 +125,7 @@ export function TarifficationFlow() {
           setFinishedAtMs(Date.now())
           closeProgressStream()
           try {
-            await fetchResults(activeSessionId)
+            await fetchSummary(activeSessionId)
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Не удалось загрузить результаты.')
           }
@@ -262,16 +269,7 @@ export function TarifficationFlow() {
         <SessionResultsPanel
           sessionId={sessionId}
           busy={busy}
-          model={
-            {
-              summary,
-              setSummary,
-              callRecords,
-              setCallRecords,
-              phoneFilter,
-              setPhoneFilter,
-            } satisfies ResultsModel
-          }
+          model={resultsModel}
         />
       ) : null}
 
@@ -279,4 +277,3 @@ export function TarifficationFlow() {
     </>
   )
 }
-
