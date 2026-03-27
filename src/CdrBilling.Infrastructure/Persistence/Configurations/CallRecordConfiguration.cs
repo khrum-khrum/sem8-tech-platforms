@@ -37,5 +37,7 @@ public sealed class CallRecordConfiguration : IEntityTypeConfiguration<CallRecor
         b.HasIndex(x => x.SessionId).HasDatabaseName("ix_cr_session");
         b.HasIndex(x => new { x.SessionId, x.CallingParty }).HasDatabaseName("ix_cr_calling");
         b.HasIndex(x => new { x.SessionId, x.CalledParty }).HasDatabaseName("ix_cr_called");
+        b.HasIndex(x => new { x.SessionId, x.Disposition, x.CallingParty }).HasDatabaseName("ix_cr_session_disposition_calling");
+        b.HasIndex(x => new { x.SessionId, x.Disposition, x.CalledParty }).HasDatabaseName("ix_cr_session_disposition_called");
     }
 }

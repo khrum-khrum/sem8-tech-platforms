@@ -163,6 +163,12 @@ namespace CdrBilling.Infrastructure.Migrations
                     b.HasIndex("SessionId", "CallingParty")
                         .HasDatabaseName("ix_cr_calling");
 
+                    b.HasIndex("SessionId", "Disposition", "CalledParty")
+                        .HasDatabaseName("ix_cr_session_disposition_called");
+
+                    b.HasIndex("SessionId", "Disposition", "CallingParty")
+                        .HasDatabaseName("ix_cr_session_disposition_calling");
+
                     b.ToTable("call_records", (string)null);
                 });
 

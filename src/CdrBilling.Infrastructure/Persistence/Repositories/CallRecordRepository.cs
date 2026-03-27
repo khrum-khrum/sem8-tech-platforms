@@ -109,24 +109,45 @@ public sealed class CallRecordRepository(AppDbContext db, NpgsqlDataSource dataS
         await using var conn = await dataSource.OpenConnectionAsync(ct);
 
         const string sql = """
+            WITH outgoing_calls AS (
+                SELECT
+                    cr.calling_party         AS phone_number,
+                    COUNT(cr.id)             AS call_count,
+                    COALESCE(SUM(cr.billable_sec), 0)    AS total_billable_sec,
+                    COALESCE(SUM(cr.computed_charge), 0) AS total_charge
+                FROM call_records cr
+                WHERE cr.session_id = @SessionId
+                  AND cr.disposition = 'Answered'
+                GROUP BY cr.calling_party
+            ),
+            incoming_calls AS (
+                SELECT
+                    cr.called_party          AS phone_number,
+                    COUNT(cr.id)             AS call_count,
+                    COALESCE(SUM(cr.billable_sec), 0)    AS total_billable_sec,
+                    COALESCE(SUM(cr.computed_charge), 0) AS total_charge
+                FROM call_records cr
+                WHERE cr.session_id = @SessionId
+                  AND cr.disposition = 'Answered'
+                GROUP BY cr.called_party
+            )
             SELECT
                 s.phone_number  AS PhoneNumber,
                 s.client_name   AS ClientName,
-                COUNT(cr.id)    AS CallCount,
-                COALESCE(SUM(cr.billable_sec), 0)     AS TotalBillableSec,
-                COALESCE(SUM(cr.computed_charge), 0)  AS TotalCharge
+                COALESCE(oc.call_count, 0) + COALESCE(ic.call_count, 0)                  AS CallCount,
+                COALESCE(oc.total_billable_sec, 0) + COALESCE(ic.total_billable_sec, 0)  AS TotalBillableSec,
+                COALESCE(oc.total_charge, 0) + COALESCE(ic.total_charge, 0)              AS TotalCharge
             FROM subscribers s
-            LEFT JOIN call_records cr
-                ON (cr.calling_party = s.phone_number OR cr.called_party = s.phone_number)
-               AND cr.session_id = @SessionId
-               AND cr.disposition = 'Answered'
+            LEFT JOIN outgoing_calls oc
+                ON oc.phone_number = s.phone_number
+            LEFT JOIN incoming_calls ic
+                ON ic.phone_number = s.phone_number
             WHERE s.session_id = @SessionId
-            GROUP BY s.phone_number, s.client_name
             ORDER BY TotalCharge DESC
             """;
 
         var rows = await conn.QueryAsync<SubscriberSummaryDto>(
-            new CommandDefinition(sql, new { SessionId = sessionId }, cancellationToken: ct));
+            new CommandDefinition(sql, new { SessionId = sessionId }, commandTimeout: 180, cancellationToken: ct));
 
         return rows.AsList();
     }
