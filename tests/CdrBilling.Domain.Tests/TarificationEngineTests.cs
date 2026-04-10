@@ -69,6 +69,16 @@ public sealed class TarificationEngineTests
         Assert.Equal(0.67m, match!.Value.Charge);
     }
 
+    [Fact]
+    public void Incoming_Call_IsNotTariffed()
+    {
+        var engine = new TarificationEngine([CreateTariff()]);
+
+        var match = engine.FindBestTariff(CreateCall(Disposition.Answered, billableSec: 120, direction: CallDirection.Incoming));
+
+        Assert.Null(match);
+    }
+
     private static TariffEntry CreateTariff(decimal ratePerMin = 1m, decimal connectionFee = 0m) =>
         TariffEntry.Create(
             sessionId: Guid.NewGuid(),
@@ -83,11 +93,14 @@ public sealed class TarificationEngineTests
             effectiveDate: AnyDate,
             expiryDate: null);
 
-    private static TarificationCall CreateCall(Disposition disposition, int billableSec) =>
+    private static TarificationCall CreateCall(
+        Disposition disposition,
+        int billableSec,
+        CallDirection direction = CallDirection.Outgoing) =>
         new(
             Id: 1,
             StartTime: new DateTimeOffset(2026, 2, 2, 10, 0, 0, TimeSpan.Zero),
-            Direction: CallDirection.Outgoing,
+            Direction: direction,
             Disposition: disposition,
             BillableSec: billableSec,
             DigitsToRate: "79001234567");

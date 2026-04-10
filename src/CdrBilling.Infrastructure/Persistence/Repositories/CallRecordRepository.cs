@@ -140,6 +140,7 @@ public sealed class CallRecordRepository(
                     COALESCE(SUM(cr.computed_charge), 0) AS total_charge
                 FROM call_records cr
                 WHERE cr.session_id = @SessionId
+                  AND cr.direction = 'Outgoing'
                   AND cr.disposition = 'Answered'
                 GROUP BY cr.calling_party
             ),
@@ -151,6 +152,7 @@ public sealed class CallRecordRepository(
                     COALESCE(SUM(cr.computed_charge), 0) AS total_charge
                 FROM call_records cr
                 WHERE cr.session_id = @SessionId
+                  AND cr.direction = 'Incoming'
                   AND cr.disposition = 'Answered'
                 GROUP BY cr.called_party
             )
@@ -159,7 +161,7 @@ public sealed class CallRecordRepository(
                 s.client_name   AS ClientName,
                 COALESCE(oc.call_count, 0) + COALESCE(ic.call_count, 0)                  AS CallCount,
                 COALESCE(oc.total_billable_sec, 0) + COALESCE(ic.total_billable_sec, 0)  AS TotalBillableSec,
-                COALESCE(oc.total_charge, 0) + COALESCE(ic.total_charge, 0)              AS TotalCharge
+                COALESCE(oc.total_charge, 0)                                              AS TotalCharge
             FROM subscribers s
             LEFT JOIN outgoing_calls oc
                 ON oc.phone_number = s.phone_number

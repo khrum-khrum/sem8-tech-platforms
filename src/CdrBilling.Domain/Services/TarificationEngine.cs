@@ -27,12 +27,8 @@ public sealed class TarificationEngine
     /// </summary>
     public TariffMatch? FindBestTariff(TarificationCall call)
     {
-        // Only answered calls are billed
-        if (call.Disposition != Disposition.Answered)
-            return null;
-
-        // Internal calls are not billed via tariff table
-        if (call.Direction == CallDirection.Internal)
+        // Only answered outgoing calls are billed.
+        if (call.Disposition != Disposition.Answered || call.Direction != CallDirection.Outgoing)
             return null;
 
         if (string.IsNullOrEmpty(call.DigitsToRate))

@@ -23,10 +23,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV ASPNETCORE_URLS=http://0.0.0.0:13000
+ENV ASPNETCORE_URLS=http://0.0.0.0:13001
 
 COPY --from=build /app/publish ./
 
-EXPOSE 13000
+EXPOSE 13001
 
 ENTRYPOINT ["dotnet", "CdrBilling.Api.dll"]

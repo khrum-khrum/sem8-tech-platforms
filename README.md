@@ -20,8 +20,8 @@ High-performance ASP.NET Core 10 backend for processing telecom Call Detail Reco
 docker compose up --build
 ```
 
-The API is now running at `http://localhost:13000`.
-The web UI is available at `http://localhost:5173`.
+The API is now running at `http://localhost:13001`.
+The web UI is available at `http://localhost:5174`.
 
 ---
 
@@ -29,13 +29,13 @@ The web UI is available at `http://localhost:5173`.
 
 | URL                                      | Description             |
 | ---------------------------------------- | ----------------------- |
-| `http://localhost:13000/scalar/v1`       | Interactive API UI      |
-| `http://localhost:13000/openapi/v1.json` | Raw OpenAPI spec (JSON) |
+| `http://localhost:13001/scalar/v1`       | Interactive API UI      |
+| `http://localhost:13001/openapi/v1.json` | Raw OpenAPI spec (JSON) |
 
 To export the spec as a file:
 
 ```bash
-curl http://localhost:13000/openapi/v1.json -o swagger.json
+curl http://localhost:13001/openapi/v1.json -o swagger.json
 ```
 
 ---
@@ -121,29 +121,29 @@ Query params for `/results/calls`: `?phone=79161234567&page=1&pageSize=50` (page
 
 ```bash
 # 1. Create session
-SESSION_ID=$(curl -s -X POST http://localhost:13000/api/sessions | jq -r '.sessionId')
+SESSION_ID=$(curl -s -X POST http://localhost:13001/api/sessions | jq -r '.sessionId')
 echo "Session: $SESSION_ID"
 
 # 2. Upload files
-curl -F "file=@cdr.txt"         http://localhost:13000/api/sessions/$SESSION_ID/upload/cdr
-curl -F "file=@tariffs.csv"     http://localhost:13000/api/sessions/$SESSION_ID/upload/tariff
-curl -F "file=@subscribers.csv" http://localhost:13000/api/sessions/$SESSION_ID/upload/subscribers
+curl -F "file=@cdr.txt"         http://localhost:13001/api/sessions/$SESSION_ID/upload/cdr
+curl -F "file=@tariffs.csv"     http://localhost:13001/api/sessions/$SESSION_ID/upload/tariff
+curl -F "file=@subscribers.csv" http://localhost:13001/api/sessions/$SESSION_ID/upload/subscribers
 
 # 3. Watch progress (background) and start tariffication
-curl -N http://localhost:13000/api/sessions/$SESSION_ID/progress &
-curl -X POST http://localhost:13000/api/sessions/$SESSION_ID/run
+curl -N http://localhost:13001/api/sessions/$SESSION_ID/progress &
+curl -X POST http://localhost:13001/api/sessions/$SESSION_ID/run
 
 # 4. View results
-curl http://localhost:13000/api/sessions/$SESSION_ID/results/summary
-curl "http://localhost:13000/api/sessions/$SESSION_ID/results/calls?page=1&pageSize=50"
+curl http://localhost:13001/api/sessions/$SESSION_ID/results/summary
+curl "http://localhost:13001/api/sessions/$SESSION_ID/results/calls?page=1&pageSize=50"
 ```
 
 ---
 
 ## Tariffication Rules
 
-1. Only `answered` calls are billed; `internal` calls are always skipped.
-2. The number used for prefix lookup: `CalledParty` for outgoing calls, `CallingParty` for incoming.
+1. Only `answered` `outgoing` calls are billed; `incoming` and `internal` calls are skipped.
+2. The number used for prefix lookup is `CalledParty`.
 3. Phone numbers are normalized to digits only before lookup.
 4. Best tariff selected by: longest matching prefix → highest priority.
 5. Tariff must satisfy: `effective_date ≤ call_date ≤ expiry_date`, timeband, and weekday mask.

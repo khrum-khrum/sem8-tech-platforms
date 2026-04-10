@@ -4,5 +4,5 @@ public sealed class TarificationOptions
 {
     public const string SectionName = "Tarification";
 
-    public int BatchSize { get; set; } = 2_000;
+    public int BatchSize { get; set; } = 200_000;
 }
